@@ -57,9 +57,10 @@ def calculate_metrics(y_true, y_pred):
 
 def case_by_case_analysis(y_true, y_pred):
     correctPredictionIndexes = []
+    labels                   = np.unique(y_true)
     indexes                  = np.arange(1, len(y_true) + 1)
-    subjectNames             = [i for i in range(21)]
-    subjectNames_str         = [str(i) for i in range(21)]
+    subjectNames             = [i for i in labels]
+    subjectNames_str         = [str(i) for i in labels]
 
     #GETTING THE CONFUSION MATRIX
     confusionMX              = confusion_matrix(y_true, y_pred)
@@ -72,7 +73,7 @@ def case_by_case_analysis(y_true, y_pred):
     #GETTING THE AMOUNT OF SAMPLES PREDICTED CORRECTLY FOR EACH SUBJECT
     print("amount of samples predicted correctly for each subject")
     for i in range(confusionMX.shape[0]):
-        print('    subject' + str(i), confusionMX[i, i])
+        print('    subject' + str(subjectNames[i]), confusionMX[i, i])
 
     #GETTING THE PREDICTIONS FOR EACH SAMPLE AND GROUP THEM ON WHETHER IT WAS CORRECT OR INCORRECT
     predictions = dict()
@@ -132,10 +133,11 @@ def case_by_case_analysis(y_true, y_pred):
     return predictions
 
 def fit_classifier():
+
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
     BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
-    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='false', subjectRemoval=sys.argv[2])
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
 
@@ -168,13 +170,14 @@ def fit_classifier():
     #SAVES THE MODEL WEIGHTS IF WANTED FOR LATER USE
     file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_name, "wb"))
-
+    i=1
 
 def fitted_classifier():
+
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
     BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
-    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='false', subjectRemoval=sys.argv[2])
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
 
@@ -191,8 +194,6 @@ def fitted_classifier():
 
     #GETTING THE PERFORMANCE OF THE MODEL
     metrics         = calculate_metrics(Y_test, y_pred)
-    confusionMatrix = confusion_matrix(Y_test, y_pred)
-    print("confusion matrix\n", confusionMatrix)
     print("accuracy:  ", metrics['accuracy'])
     print("precision: ", metrics['precision'])
     print("recall:    ", metrics['recall'])
@@ -204,7 +205,7 @@ def tune_classifier():
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
     BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
-    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='false', subjectRemoval=sys.argv[2])
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
 
@@ -240,8 +241,8 @@ def main():
 if __name__ == '__main__':
     #STARTING CODE --------
 
-    # DIRECTIONS ON WHAT TO DO
-    sys.argv.extend(['train'])
+    # DIRECTIONS ON WHAT TO DO AND WHETHER WE WANT TO USE THE DATA BEFORE OR AFTER SUBJECT REMOVAL
+    sys.argv.extend(['load', 'after subject removal'])
 
     if sys.argv[1] == 'train':
         #TRAINS A XGBOOST MODEL ON THE PREPROCESSED DATA

@@ -46,16 +46,16 @@ class Load_And_Preprocess_Dataset():
         #CREATING TRAIN/TEST DATASETS
         X_train = X_frame.loc[ind_train]
         Y_train = Y_frame[Y_frame[1] == 1]
-        Y_train = Y_train.drop(1, axis=1)
+        Y_train = np.array(Y_train.drop(1, axis=1))
 
         X_test = X_frame.loc[ind_test]
         Y_test = Y_frame[Y_frame[1] == 0]
-        Y_test = Y_test.drop(1, axis=1)
+        Y_test = np.array(Y_test.drop(1, axis=1))
 
         #TRANSFROM THE LABELS FROM INTEGERS TO ONE HOT VECTORS
         if categorical == 'true':
-            Y_train = np.array(self.func_oneHotEncoder(Y_train, categorical='true'))
-            Y_test  = np.array(self.func_oneHotEncoder(Y_test, categorical='true'))
+            Y_train = self.func_oneHotEncoder(Y_train, categorical='true')
+            Y_test  = self.func_oneHotEncoder(Y_test, categorical='true')
 
         #SHUFFLING THE TRAINING DATASET
         X_train, Y_train = shuffle(X_train, Y_train, random_state=3)

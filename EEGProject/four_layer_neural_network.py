@@ -77,7 +77,7 @@ class Net(nn.Module):
             y_pred.extend(np.argmax(output1, axis=1))
             y_true.extend(np.argmax(y.numpy(), axis=1))
         duration = time.time()-start_time
-        print("time took: ", duration)
+        print("time took to go through the test dataset", duration)
 
         #EVALUTING THE MODEL
         confusionMatrix = confusion_matrix(y_true, y_pred)
@@ -86,7 +86,7 @@ class Net(nn.Module):
         recall          = recall_score(y_true, y_pred, labels=list(range(22)), average='macro')
         f1              = f1_score(y_true, y_pred, labels=list(range(22)), average='macro')
 
-        metrics         = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
+        metrics         = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1 score': f1}
 
         return y_pred, y_true, metrics, confusionMatrix
 

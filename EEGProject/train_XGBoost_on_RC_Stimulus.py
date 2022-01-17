@@ -41,9 +41,19 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import RandomizedSearchCV
 
 from load_and_preprocess_data import Load_And_Preprocess_Dataset
-from four_layer_neural_network import Net
+
+def calculate_metrics(y_true, y_pred):
+    metrics = dict()
+    labels               = list(np.unique(y_true))
+    metrics['accuracy']  = accuracy_score(y_true, y_pred)
+    metrics['recall']    = recall_score(y_true, y_pred,labels=labels, average='macro')
+    metrics['precision'] = precision_score(y_true, y_pred,labels=labels, average='macro')
+    metrics['f1 score']  = f1_score(y_true, y_pred,labels=labels, average='macro')
+
+    return metrics
 
 def case_by_case_analysis(y_true, y_pred):
     correctPredictionIndexes = []
@@ -125,24 +135,30 @@ def fit_classifier():
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
     BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
-    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='true')
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
-    #IF PYTORCH, CREATE TENSOR DATASET
-    train_loader, test_loader = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
-    #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model     = Net()
-    optimizer = optim.SGD(model.parameters(), lr=0.055, weight_decay=0.0001)
-    criterion = nn.CrossEntropyLoss()
+    #XGBOOST MODEL
+    xgb_model  = xgb.XGBClassifier(objective="multi:softprob", learning_rate=0.036, random_state=42,
+                                  n_estimators=400, max_depth=10, subsample=0.85)
+
 
     #TRAINING THE MODEL
-    time1 = time.time()
-    model.train(train_loader, optimizer, criterion)
-    duration = time.time() - time1
-    print("time took to train the model", duration)
+    time1    = time.time()
+    xgb_model.fit(X_train, Y_train)
+    durationTrain = time.time() - time1
+    print("time took to train the model", durationTrain)
 
     #EVALUATING THE MODEL
-    output_list, true_list, metrics, confusionMatrix = model.compute_performance_metrics(test_loader)
+    time2   = time.time()
+    y_pred  = xgb_model.predict(X_test)
+    durationTest = time.time() - time2
+    print("time took to go through the test dataset", durationTest)
+
+    #GETTING THE PERFORMANCE OF THE MODEL
+    metrics         = calculate_metrics(Y_test, y_pred)
+    confusionMatrix = confusion_matrix(Y_test, y_pred)
     print("confusion matrix\n", confusionMatrix)
     print("accuracy:  ", metrics['accuracy'])
     print("precision: ", metrics['precision'])
@@ -150,35 +166,71 @@ def fit_classifier():
     print("f1_score:  ", metrics['f1 score'])
 
     #SAVES THE MODEL WEIGHTS IF WANTED FOR LATER USE
-    file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_NN.pth'
-    torch.save(model.state_dict(), file_name)
+    file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
+    pickle.dump(xgb_model, open(file_name, "wb"))
+
 
 def fitted_classifier():
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
     BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
-    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='true')
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
-    #IF PYTORCH, CREATE TENSOR DATASET
-    train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
-    #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model_loaded     = Net()
-    optimizer        = optim.SGD(model_loaded.parameters(), lr=0.055, weight_decay=0.0001)
-    criterion        = nn.CrossEntropyLoss()
 
     #LOAD THE ALREADY FITTED MODEL
-    file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_NN.pth'
-    model_loaded.load_state_dict(torch.load(file_name))
+    file_name        = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
+    xgb_model_loaded = pickle.load(open(file_name, "rb"))
 
     #EVALUATING THE MODEL
-    y_pred, y_true, metrics, confusionMatrix = model_loaded.compute_performance_metrics(test_loader)
+    time2   = time.time()
+    y_pred  = xgb_model_loaded.predict(X_test)
+    durationTest = time.time() - time2
+    print("time took to go through the test dataset", durationTest)
+
+    #GETTING THE PERFORMANCE OF THE MODEL
+    metrics         = calculate_metrics(Y_test, y_pred)
+    confusionMatrix = confusion_matrix(Y_test, y_pred)
+    print("confusion matrix\n", confusionMatrix)
     print("accuracy:  ", metrics['accuracy'])
     print("precision: ", metrics['precision'])
     print("recall:    ", metrics['recall'])
     print("f1_score:  ", metrics['f1 score'])
 
-    predictions = case_by_case_analysis(y_true, y_pred)
+    predictions = case_by_case_analysis(Y_test, y_pred)
+
+def tune_classifier():
+    #LOAD AND PREPROCESS THE DATASET
+    LoaderPreprocessor               = Load_And_Preprocess_Dataset()
+    BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
+    X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, categorical='false')
+    Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
+
+
+    #INITIALIZING THE XGBOOST MODEL
+    xgb_model = xgb.XGBClassifier(objective="multi:softprob", learning_rate=0.2, random_state=42,
+                                  n_estimators=500, max_depth=10, subsample=0.6, seed=20)
+
+    #INITIAZING THE PARAMETERS THAT THE XGBOOST MODEL IS GOING TO TRY
+    params = {'max_depth': [10, 11],
+              'learning_rate': [0.0380],
+              'subsample': [0.75, 0.79, 0.81],
+              'n_estimators': [400],
+              'seed': [20],
+              'random_state': [42]}
+
+    #DECIDING HOW THE HYPER PARAMETERS WILL BE SELECTED, HOW IT BE EVALUATED, AND THE AMOUNT OF TIMES IT WILL TRY A COMBINATION
+    clf = RandomizedSearchCV(estimator=xgb_model,
+                             param_distributions=params,
+                             scoring='neg_mean_squared_error',
+                             n_iter=3,
+                             verbose=1)
+
+    #FITTING THE CLASSIFIER THE DIFFERENT COMBINATIONS OF HYPER PARAMETERS AND FIND WHICH ONE IS THE BEST
+    clf.fit(X_train, Y_train)
+    print("Best parameters:", clf.best_params_)
+    print("Lowest RMSE: ", (-clf.best_score_) ** (1 / 2.0))
 
     i=1
 
@@ -189,15 +241,17 @@ if __name__ == '__main__':
     #STARTING CODE --------
 
     # DIRECTIONS ON WHAT TO DO
-    sys.argv.extend(['load'])
+    sys.argv.extend(['train'])
 
     if sys.argv[1] == 'train':
-        #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA
+        #TRAINS A XGBOOST MODEL ON THE PREPROCESSED DATA
         fit_classifier()
     elif sys.argv[1] == 'load':
-        #LOADS THE TRAINED 4-LAYER NEURAL NETWORK
+        #LOADS THE TRAINED XGBOOST MODEL
         fitted_classifier()
+    elif sys.argv[1] == 'tune':
+        #TUNE THE XGBOOST MODEL FOR THE BEST HYPER PARAMETERS
+        tune_classifier()
     i =1
 
     pass
-

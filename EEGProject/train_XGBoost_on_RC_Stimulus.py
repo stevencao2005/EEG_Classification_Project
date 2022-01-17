@@ -136,7 +136,7 @@ def fit_classifier():
 
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
-    BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
+    BED_dataset                      = LoaderPreprocessor.func_data_load()
     X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='false', subjectRemoval=sys.argv[2])
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
@@ -176,7 +176,7 @@ def fitted_classifier():
 
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
-    BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
+    BED_dataset                      = LoaderPreprocessor.func_data_load()
     X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='false', subjectRemoval=sys.argv[2])
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
@@ -241,8 +241,12 @@ def main():
 if __name__ == '__main__':
     #STARTING CODE --------
 
-    # DIRECTIONS ON WHAT TO DO AND WHETHER WE WANT TO USE THE DATA BEFORE OR AFTER SUBJECT REMOVAL
-    sys.argv.extend(['load', 'after subject removal'])
+    #DIRECTIONS ON WHAT TO DO AND WHETHER WE WANT TO USE THE DATA BEFORE OR AFTER SUBJECT REMOVAL
+    #OPTIONS:
+         #TRAIN OR LOAD
+         #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
+         #RO OR RC OR RC+RO
+    sys.argv.extend(['train', 'before subject removal', 'RC+RO'])
 
     if sys.argv[1] == 'train':
         #TRAINS A XGBOOST MODEL ON THE PREPROCESSED DATA

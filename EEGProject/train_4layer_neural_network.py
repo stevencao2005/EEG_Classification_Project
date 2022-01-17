@@ -133,7 +133,7 @@ def fit_classifier():
     train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
     #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model     = Net(in_features=X_train.shape[1])
+    model     = Net(in_features=X_train.shape[1], epochs=1900)
     optimizer = optim.SGD(model.parameters(), lr=0.055, weight_decay=0.0001)
     criterion = nn.CrossEntropyLoss()
 
@@ -166,7 +166,7 @@ def fitted_classifier():
     train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
     #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model_loaded     = Net(in_features=X_train.shape[1])
+    model_loaded     = Net(in_features=X_train.shape[1], epochs=1900)
     optimizer        = optim.SGD(model_loaded.parameters(), lr=0.055, weight_decay=0.0001)
     criterion        = nn.CrossEntropyLoss()
 
@@ -197,8 +197,8 @@ if __name__ == '__main__':
     #OPTIONS:
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
-         #RO OR RC OR RC+RO
-    sys.argv.extend(['train', 'after subject removal', 'RO'])
+         #RO OR RC OR AS OR RC+RO
+    sys.argv.extend(['train', 'after subject removal', 'RC+AS'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

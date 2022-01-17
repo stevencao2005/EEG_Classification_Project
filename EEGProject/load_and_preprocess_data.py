@@ -31,9 +31,16 @@ class Load_And_Preprocess_Dataset():
         elif sys.argv[3] == 'RO':
             BED_dataset = self.func_data_load_SPEC_RO_preprocessed()
             return BED_dataset
+        elif sys.argv[3] == 'AS':
+            BED_dataset = self.func_data_load_SPEC_AS_preprocessed()
+            return BED_dataset
         elif sys.argv[3] == 'RC+RO':
             BED_dataset = self.func_data_load_SPEC_RC_and_RO_preprocessed()
             return BED_dataset
+        elif sys.argv[3] == 'RC+AS':
+            BED_dataset = self.func_data_load_SPEC_RC_and_AS_preprocessed()
+            return BED_dataset
+
 
 
     def func_data_load_SPEC_RC_preprocessed(self):
@@ -42,6 +49,10 @@ class Load_And_Preprocess_Dataset():
 
     def func_data_load_SPEC_RO_preprocessed(self):
         BED_dataset = loadmat(os.path.abspath('.') + '/BED/Features/Identification/SPEC/SPEC_rest_open.mat')
+        return BED_dataset
+
+    def func_data_load_SPEC_AS_preprocessed(self):
+        BED_dataset = loadmat(os.path.abspath('.') + '/BED/Features/Identification/SPEC/SPEC_image.mat')
         return BED_dataset
 
     def func_data_load_SPEC_RC_and_RO_preprocessed(self):
@@ -89,6 +100,94 @@ class Load_And_Preprocess_Dataset():
         RO_and_RC_dataset = {'feat': RO_and_RC_dataset_features, 'Y': RO_and_RC_dataset_labels}
 
         return RO_and_RC_dataset
+
+    def func_data_load_SPEC_RC_and_AS_preprocessed(self):
+        RC_dataset = loadmat(os.path.abspath('.')+'/BED/Features/Identification/SPEC/SPEC_rest_closed.mat')
+        AS_dataset = loadmat(os.path.abspath('.')+'/BED/Features/Identification/SPEC/SPEC_rest_open.mat')
+
+        RC_features = RC_dataset['feat']
+        RC_labels   = RC_dataset['Y']
+        RC_info     = self.func_data_getinfo(RC_dataset)
+
+        AS_features = AS_dataset['feat']
+        AS_labels   = AS_dataset['Y']
+        AS_info     = self.func_data_getinfo(AS_dataset)
+
+
+        result      = [min(els) for els in zip(RC_info[1], AS_info[1])]
+
+        AS_and_RC_dataset_features = np.zeros((RC_features.shape[0], 448))
+        AS_and_RC_dataset_labels   = np.zeros((RC_features.shape[0], 2))
+
+        i=1
+        for j in range(len(RC_info[1]) + 1):
+            threshold = sum(RC_info[1][:j])
+            if i <= threshold:
+                startInd = sum(RC_info[1][:j])
+                endInd   = sum(RC_info[1][:j + 1])
+                if endInd == 2875:
+                    endInd = 2876
+                m = startInd
+                for k in range(int(endInd - startInd)):  # k=1
+                    rcMinimums         = sum(RC_info[1][:j])
+                    asMinimums         = sum(AS_info[1][:j])
+                    oneSampleRC        = RC_features[rcMinimums + k, :]
+                    oneSampleAS        = AS_features[asMinimums + k, :]
+                    oneSampleAS_and_RC = np.append(oneSampleRC, oneSampleAS)
+
+                    n                                = int(math.floor(j / 3) + 1)
+                    sessions                         = [1, 2, 3]
+                    nn                               = int(sessions[j % 3])
+                    oneSampleAS_and_RC_label         = (n, nn)
+                    AS_and_RC_dataset_features[i, :] = oneSampleAS_and_RC
+                    AS_and_RC_dataset_labels[i, :]   = oneSampleAS_and_RC_label
+                    i += 1
+
+        AS_and_RC_dataset = {'feat': AS_and_RC_dataset_features, 'Y': AS_and_RC_dataset_labels}
+
+        return AS_and_RC_dataset
+
+    def func_data_load_SPEC_twoDatasetsCombined_preprocessed(self, dataset1, dataset2):
+        dataset1_features = dataset1['feat']
+        dataset1_labels   = dataset1['Y']
+        dataset1_info     = self.func_data_getinfo(dataset1)
+
+        dataset2_features = dataset2['feat']
+        dataset2_labels   = dataset2['Y']
+        dataset2_info     = self.func_data_getinfo(dataset2)
+
+
+        result      = [min(els) for els in zip(dataset1_info[1], dataset2_info[1])]
+
+        dataset1and2_features = np.zeros((dataset1_features.shape[0], 448))
+        dataset1and2_labels   = np.zeros((dataset1_features.shape[0], 2))
+
+        i=1
+        for j in range(len(dataset1_info[1]) + 1):
+            threshold = sum(dataset1_info[1][:j])
+            if i <= threshold:
+                startInd = sum(dataset1_info[1][:j])
+                endInd   = sum(dataset1_info[1][:j + 1])
+                if endInd == 2875:
+                    endInd = 2876
+                m = startInd
+                for k in range(int(endInd - startInd)):  # k=1
+                    dataset1_Minimums         = sum(dataset1_info[1][:j])
+                    dataset2_Minimums         = sum(dataset1and2_features[1][:j])
+                    oneSampledataset1         = dataset1_features[dataset1_Minimums + k, :]
+                    oneSampledataset2         = dataset2_features[dataset2_Minimums + k, :]
+                    oneSampledataset1and2     = np.append(oneSampledataset1, oneSampledataset2)
+
+                    n                                = int(math.floor(j / 3) + 1)
+                    sessions                         = [1, 2, 3]
+                    nn                               = int(sessions[j % 3])
+                    oneSampledataset1and2_label         = (n, nn)
+                    dataset1and2_features[i, :] = oneSampledataset1and2
+                    dataset1and2_labels[i, :]   = oneSampledataset1and2_label
+                    i += 1
+
+        dataset1and2_dataset = {'feat': dataset1and2_features, 'Y': dataset1and2_labels}
+        return dataset1and2_dataset
 
     def func_data_getinfo(self, BED_dataset):
         info = dict()

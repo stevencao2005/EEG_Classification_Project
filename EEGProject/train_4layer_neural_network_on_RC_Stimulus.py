@@ -126,14 +126,14 @@ def fit_classifier():
 
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
-    BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
+    BED_dataset                      = LoaderPreprocessor.func_data_load()
     X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='true', subjectRemoval=sys.argv[2])
 
     #IF PYTORCH, CREATE TENSOR DATASET
     train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
     #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model     = Net()
+    model     = Net(in_features=X_train.shape[1])
     optimizer = optim.SGD(model.parameters(), lr=0.055, weight_decay=0.0001)
     criterion = nn.CrossEntropyLoss()
 
@@ -159,14 +159,14 @@ def fitted_classifier():
 
     #LOAD AND PREPROCESS THE DATASET
     LoaderPreprocessor               = Load_And_Preprocess_Dataset()
-    BED_dataset                      = LoaderPreprocessor.func_data_load_SPEC_RC_preprocessed()
+    BED_dataset                      = LoaderPreprocessor.func_data_load()
     X_train, X_test, Y_train, Y_test = LoaderPreprocessor.func_dataPreProcessing(BED_dataset, toCategorical='true', subjectRemoval=sys.argv[2])
 
     #IF PYTORCH, CREATE TENSOR DATASET
     train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
     #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model_loaded     = Net()
+    model_loaded     = Net(in_features=X_train.shape[1])
     optimizer        = optim.SGD(model_loaded.parameters(), lr=0.055, weight_decay=0.0001)
     criterion        = nn.CrossEntropyLoss()
 
@@ -193,8 +193,12 @@ def main():
 if __name__ == '__main__':
     #STARTING CODE --------
 
-    # DIRECTIONS ON WHAT TO DO AND WHETHER WE WANT TO USE THE DATA BEFORE OR AFTER SUBJECT REMOVAL
-    sys.argv.extend(['load', 'before subject removal'])
+    #DIRECTIONS ON WHAT TO DO AND WHETHER WE WANT TO USE THE DATA BEFORE OR AFTER SUBJECT REMOVAL
+    #OPTIONS:
+         #TRAIN OR LOAD
+         #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
+         #RO OR RC OR RC+RO
+    sys.argv.extend(['train', 'after subject removal', 'RO'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

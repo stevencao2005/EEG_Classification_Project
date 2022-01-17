@@ -25,7 +25,26 @@ class Load_And_Preprocess_Dataset():
         BED_dataset = loadmat(os.path.abspath('.')+'/BED/Features/Identification/SPEC/SPEC_rest_closed.mat')
         return BED_dataset
 
-    def func_dataPreProcessing(self, BED_dataset, categorical):
+    def func_getOnlyGoodSubjectsData(self, X_train, X_test, Y_train, Y_test):
+        indexesTrain = []
+        indexesTest  = []
+        goodSubjects = [10, 12, 13, 14, 4, 5, 7, 8, 9]
+
+        for subject in goodSubjects:
+            ind_train = list(Y_train[Y_train[0] == subject].index)
+            ind_test  = list(Y_test[Y_test[0]   == subject].index)
+            indexesTrain.extend(ind_train)
+            indexesTest.extend(ind_test)
+
+
+        Y_train = Y_train.loc[indexesTrain]
+        Y_test  = Y_test.loc[indexesTest]
+        X_train = X_train.loc[indexesTrain]
+        X_test  = X_test.loc[indexesTest]
+
+        return X_train, X_test, Y_train, Y_test
+
+    def func_dataPreProcessing(self, BED_dataset, toCategorical, subjectRemoval):
 
         #GET THE FEATURES AND LABELS
         X_frame    = pd.DataFrame(BED_dataset['feat'])
@@ -44,16 +63,22 @@ class Load_And_Preprocess_Dataset():
         ind_test   = list(Y_frame[Y_frame[1] == 0].index)
 
         #CREATING TRAIN/TEST DATASETS
-        X_train = X_frame.loc[ind_train]
-        Y_train = Y_frame[Y_frame[1] == 1]
-        Y_train = np.array(Y_train.drop(1, axis=1))
+        X_train    = X_frame.loc[ind_train]
+        Y_train    = Y_frame[Y_frame[1] == 1]
+        Y_train    = Y_train.drop(1, axis=1)
 
-        X_test = X_frame.loc[ind_test]
-        Y_test = Y_frame[Y_frame[1] == 0]
-        Y_test = np.array(Y_test.drop(1, axis=1))
+        X_test     = X_frame.loc[ind_test]
+        Y_test     = Y_frame[Y_frame[1] == 0]
+        Y_test     = Y_test.drop(1, axis=1)
 
+        #IF CHOSEN OPTION "AFTER SUBJECT REMOVAL", THEN ONLY GET THE GOOD SUBJECTS
+        if subjectRemoval == 'after subject removal':
+            X_train, X_test, Y_train, Y_test = self.func_getOnlyGoodSubjectsData(X_train, X_test, Y_train, Y_test)
+
+        Y_train = np.array(Y_train)
+        Y_test  = np.array(Y_test)
         #TRANSFROM THE LABELS FROM INTEGERS TO ONE HOT VECTORS
-        if categorical == 'true':
+        if toCategorical == 'true':
             Y_train = self.func_oneHotEncoder(Y_train, categorical='true')
             Y_test  = self.func_oneHotEncoder(Y_test, categorical='true')
 

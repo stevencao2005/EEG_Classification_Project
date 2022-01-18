@@ -202,9 +202,9 @@ def fit_classifier():
     file = os.path.abspath('.') + '/saved_datasets/XGBoost/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     create_directory(file)
     #SAVES THE MODEL WEIGHTS
-    file_name = file+'/RC_model_weights_XGBoost.pkl'
+    file_name = file+'/model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_name, "wb"))
-    file_last = os.path.abspath('.') +'/saved_datasets/RC_model_weights_XGBoost.pkl'
+    file_last = os.path.abspath('.') +'/saved_datasets/model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_last, "wb"))
 
     #SAVES THE PARAMETERS FOR THIS TRIAL
@@ -225,7 +225,7 @@ def fitted_classifier():
 
 
     #LOAD THE ALREADY FITTED MODEL
-    file_name        = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
+    file_name        = os.path.abspath('.') + '/saved_datasets/model_weights_XGBoost.pkl'
     xgb_model_loaded = pickle.load(open(file_name, "rb"))
 
     #EVALUATING THE MODEL

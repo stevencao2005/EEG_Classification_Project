@@ -1,17 +1,23 @@
 
 #IMPORT ALL NEEDED MODULES
-import time
-import os
-import torch
-import torch.nn as nn
-import torch.optim as optim
+
+#Standard library imports
 import numpy as np
+import os
 import pandas as pd
+import time
+
+#Third party imports
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+
 
 class Net(nn.Module):
     def __init__(self, epochs=100, in_features=224):

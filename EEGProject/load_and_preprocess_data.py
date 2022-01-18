@@ -1,22 +1,25 @@
 
 #IMPORT ALL NEEDED MODULES
-import time
-import scipy
+
+#Standard library imports
 import math
-import sys
-import os
 import numpy as np
+import os
 import pandas as pd
+import scipy
+import sys
+import time
+
+#Third party imports
+from scipy.io import loadmat
+from scipy.io import loadmat
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import shuffle
+from tensorflow.keras.utils import to_categorical
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from scipy.io import loadmat
-from tensorflow.keras.utils import to_categorical
-from sklearn.preprocessing import StandardScaler
 from torch.utils.data import TensorDataset
-from scipy.io import loadmat
-from sklearn.utils import shuffle
-
 
 
 class Load_And_Preprocess_Dataset():

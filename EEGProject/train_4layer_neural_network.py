@@ -1,50 +1,56 @@
+""" Author: Steven Cao"""
+
 
 #IMPORT ALL NEEDED MODULES
+
+#Standard library imports
+import datetime
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import pathlib
+import pickle
+import sys
 import scipy
 import time
-import mne
-import torch
-import sys
-import os
-import pathlib
-import datetime
-import pickle
-import pandas as pd
-import numpy as np
-import xgboost as xgb
-
-import matplotlib
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-
 import warnings
+
+matplotlib.use("TkAgg")
 warnings.filterwarnings('ignore')
 
+#Third party imports
 import librosa
 from librosa.feature.spectral import spectral_centroid
 from librosa.feature.spectral import spectral_flatness
 from librosa.feature.spectral import spectral_bandwidth
 from librosa.feature.spectral import rms
-
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset
-from tensorflow.keras.utils import to_categorical
-from torch.utils.data import TensorDataset
-from scipy.io import loadmat
+import mne
 from pyprep.prep_pipeline import PrepPipeline
-from sklearn.utils import shuffle
-from sklearn.preprocessing import StandardScaler
+from scipy.io import loadmat
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import shuffle
+from tensorflow.keras.utils import to_categorical
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset
+import xgboost as xgb
 
+
+#Local application imports
 from load_and_preprocess_data import Load_And_Preprocess_Dataset
 from four_layer_neural_network import Net
+
+
+
 
 def case_by_case_analysis(y_true, y_pred):
     correctPredictionIndexes = []
@@ -236,8 +242,8 @@ if __name__ == '__main__':
     #OPTIONS:
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
-         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO
-    sys.argv.extend(['load', 'after subject removal', 'RC+RO'])
+         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO OR AS+RO+RC
+    sys.argv.extend(['load', 'after subject removal', 'RC'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

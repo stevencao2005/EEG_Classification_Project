@@ -181,8 +181,10 @@ def fit_classifier():
     file = os.path.abspath('.') + '/saved_datasets/neural_network/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     create_directory(file)
     #SAVES THE MODEL WEIGHTS
-    file_name = file+'/RC_model_weights_NN.pth'
+    file_name = file+'/model_weights_NN.pth'
     torch.save(model.state_dict(), file_name)
+    file_last = os.path.abspath('.') +'/saved_datasets/model_weights_NN.pth'
+    torch.save(model.state_dict(), file_last)
 
     #SAVES THE PARAMETERS FOR THIS TRIAL
     info = gettingInfo(model, optimizer)
@@ -207,7 +209,7 @@ def fitted_classifier():
     criterion        = nn.CrossEntropyLoss()
 
     #LOAD THE ALREADY FITTED MODEL
-    file_name        = os.path.abspath('.') + '/saved_datasets/RC_model_weights_NN.pth'
+    file_name        = os.path.abspath('.') + '/saved_datasets/model_weights_NNFixed.pth'
     model_loaded.load_state_dict(torch.load(file_name))
 
 
@@ -235,7 +237,7 @@ if __name__ == '__main__':
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
          #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO
-    sys.argv.extend(['train', 'after subject removal', 'AS+RO'])
+    sys.argv.extend(['load', 'after subject removal', 'RC+RO'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

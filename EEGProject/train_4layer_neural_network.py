@@ -7,6 +7,7 @@ import torch
 import sys
 import os
 import pathlib
+import datetime
 import pickle
 import pandas as pd
 import numpy as np
@@ -121,6 +122,30 @@ def case_by_case_analysis(y_true, y_pred):
                     print("Sample {0}: Predicted as {1}  Actual Value is {2}".format(sampleNum[0], sampleNum[1],
                                                                                      sampleNum[2]))
     return predictions
+def gettingInfo(model, optimizer):
+    info = pd.DataFrame(data=np.zeros((1, 8), dtype=np.float), index=[0],
+                       columns=['lr', 'momentum', 'dampening', 'weight_decay', 'nesterov', 'epochs', 'subject removal', 'data'])
+    info['lr']              = optimizer.defaults['lr']
+    info['momentum']        = optimizer.defaults['momentum']
+    info['dampening']       = optimizer.defaults['dampening']
+    info['weight_decay']    = optimizer.defaults['weight_decay']
+    info['nesterov']        = optimizer.defaults['nesterov']
+    info['epochs']          = model.epochs
+    info['subject removal'] = sys.argv[2]
+    info['data']            = sys.argv[3]
+    i=1
+    return info
+
+def create_directory(directory_path):
+    if os.path.exists(directory_path):
+        return None
+    else:
+        try:
+            os.makedirs(directory_path)
+        except:
+            # in case another machine created the path meanwhile !:(
+            return None
+        return directory_path
 
 def fit_classifier():
 
@@ -137,6 +162,7 @@ def fit_classifier():
     optimizer = optim.SGD(model.parameters(), lr=0.055, weight_decay=0.0001)
     criterion = nn.CrossEntropyLoss()
 
+
     #TRAINING THE MODEL
     time1    = time.time()
     model.train(train_loader, optimizer, criterion)
@@ -146,14 +172,24 @@ def fit_classifier():
     #EVALUATING THE MODEL
     output_list, true_list, metrics, confusionMatrix = model.compute_performance_metrics(test_loader)
     print("confusion matrix\n", confusionMatrix)
-    print("accuracy:  ", metrics['accuracy'])
-    print("precision: ", metrics['precision'])
-    print("recall:    ", metrics['recall'])
-    print("f1_score:  ", metrics['f1 score'])
+    print("accuracy:  ", metrics['accuracy'][0])
+    print("precision: ", metrics['precision'][0])
+    print("recall:    ", metrics['recall'][0])
+    print("f1_score:  ", metrics['f1 score'][0])
 
-    #SAVES THE MODEL WEIGHTS IF WANTED FOR LATER USE
-    file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_NN.pth'
+    #CREATE THE DIRECTORY
+    file = os.path.abspath('.') + '/saved_datasets/neural_network/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    create_directory(file)
+    #SAVES THE MODEL WEIGHTS
+    file_name = file+'/RC_model_weights_NN.pth'
     torch.save(model.state_dict(), file_name)
+
+    #SAVES THE PARAMETERS FOR THIS TRIAL
+    info = gettingInfo(model, optimizer)
+    info.to_csv(file+'/info.csv', index=False)
+
+    #SAVES THE METRICS FOR THIS TRIAL
+    metrics.to_csv(file+'/df_metrics.csv', index=False)
 
 def fitted_classifier():
 
@@ -174,14 +210,15 @@ def fitted_classifier():
     file_name        = os.path.abspath('.') + '/saved_datasets/RC_model_weights_NN.pth'
     model_loaded.load_state_dict(torch.load(file_name))
 
+
     #EVALUATING THE MODEL
     y_pred, y_true, metrics, confusionMatrix = model_loaded.compute_performance_metrics(test_loader)
     predictions                              = case_by_case_analysis(y_true, y_pred)
 
-    print("accuracy:  ", metrics['accuracy'])
-    print("precision: ", metrics['precision'])
-    print("recall:    ", metrics['recall'])
-    print("f1_score:  ", metrics['f1 score'])
+    print("accuracy:  ", metrics['accuracy'][0])
+    print("precision: ", metrics['precision'][0])
+    print("recall:    ", metrics['recall'][0])
+    print("f1_score:  ", metrics['f1 score'][0])
 
 
 
@@ -197,8 +234,8 @@ if __name__ == '__main__':
     #OPTIONS:
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
-         #RO OR RC OR AS OR RC+RO
-    sys.argv.extend(['train', 'after subject removal', 'RC+AS'])
+         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO
+    sys.argv.extend(['train', 'after subject removal', 'AS+RO'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

@@ -81,12 +81,15 @@ class Net(nn.Module):
 
         #EVALUTING THE MODEL
         confusionMatrix = confusion_matrix(y_true, y_pred)
-        accuracy        = accuracy_score(y_true, y_pred)
-        precision       = precision_score(y_true, y_pred, labels=list(range(22)), average='macro')
-        recall          = recall_score(y_true, y_pred, labels=list(range(22)), average='macro')
-        f1              = f1_score(y_true, y_pred, labels=list(range(22)), average='macro')
 
-        metrics         = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1 score': f1}
+        metrics = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
+                           columns=['accuracy', 'precision', 'recall', 'f1 score'])
+
+        labels = list(np.unique(y_true))
+        metrics['accuracy'] = accuracy_score(y_true, y_pred)
+        metrics['recall'] = recall_score(y_true, y_pred, labels=labels, average='macro')
+        metrics['precision'] = precision_score(y_true, y_pred, labels=labels, average='macro')
+        metrics['f1 score'] = f1_score(y_true, y_pred, labels=labels, average='macro')
 
         return y_pred, y_true, metrics, confusionMatrix
 

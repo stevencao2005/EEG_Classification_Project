@@ -97,11 +97,10 @@ class Load_And_Preprocess_Dataset():
                     n                                = int(math.floor(j / 3) + 1)
                     sessions                         = [1, 2, 3]
                     nn                               = int(sessions[j % 3])
-                    oneSampledataset1and2_label         = (n, nn)
+                    oneSampledataset1and2_label         = (int(n), int(nn))
                     dataset1and2_features[i, :] = oneSampledataset1and2
                     dataset1and2_labels[i, :]   = oneSampledataset1and2_label
                     i += 1
-
         dataset1and2_dataset = {'feat': dataset1and2_features, 'Y': dataset1and2_labels}
         return dataset1and2_dataset
 

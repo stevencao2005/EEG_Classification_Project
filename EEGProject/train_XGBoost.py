@@ -7,6 +7,7 @@ import torch
 import sys
 import os
 import pathlib
+import datetime
 import pickle
 import pandas as pd
 import numpy as np
@@ -45,13 +46,17 @@ from sklearn.model_selection import RandomizedSearchCV
 
 from load_and_preprocess_data import Load_And_Preprocess_Dataset
 
-def calculate_metrics(y_true, y_pred):
-    metrics = dict()
-    labels               = list(np.unique(y_true))
-    metrics['accuracy']  = accuracy_score(y_true, y_pred)
-    metrics['recall']    = recall_score(y_true, y_pred,labels=labels, average='macro')
-    metrics['precision'] = precision_score(y_true, y_pred,labels=labels, average='macro')
-    metrics['f1 score']  = f1_score(y_true, y_pred,labels=labels, average='macro')
+def calculate_metrics(y_true, y_pred, durationTrain=None, durationTest=None):
+    metrics = pd.DataFrame(data=np.zeros((1, 6), dtype=np.float), index=[0],
+                           columns=['accuracy', 'precision', 'recall', 'f1 score', 'training_time', 'testing_time'])
+
+    labels = list(np.unique(y_true))
+    metrics['accuracy']      = accuracy_score(y_true, y_pred)
+    metrics['recall']        = recall_score(y_true, y_pred, labels=labels, average='macro')
+    metrics['precision']     = precision_score(y_true, y_pred, labels=labels, average='macro')
+    metrics['f1 score']      = f1_score(y_true, y_pred, labels=labels, average='macro')
+    metrics['training_time'] = durationTrain
+    metrics['testing_time']  = durationTest
 
     return metrics
 
@@ -59,8 +64,8 @@ def case_by_case_analysis(y_true, y_pred):
     correctPredictionIndexes = []
     labels                   = np.unique(y_true)
     indexes                  = np.arange(1, len(y_true) + 1)
-    subjectNames             = [i for i in labels]
-    subjectNames_str         = [str(i) for i in labels]
+    subjectNames             = [int(i) for i in labels]
+    subjectNames_str         = [str(int(i)) for i in labels]
 
     #GETTING THE CONFUSION MATRIX
     confusionMX              = confusion_matrix(y_true, y_pred)
@@ -132,6 +137,32 @@ def case_by_case_analysis(y_true, y_pred):
                                                                                      sampleNum[2]))
     return predictions
 
+def gettingInfo(xgb_model):
+    info = pd.DataFrame(data=np.zeros((1, 8), dtype=np.float), index=[0],
+                       columns=['objective', 'learning_rate', 'random_state', 'n_estimators', 'max_depth',
+                                'subsample', 'subject removal', 'data'])
+    info['objective']          = xgb_model.objective
+    info['learning_rate']      = xgb_model.learning_rate
+    info['random_state']       = xgb_model.random_state
+    info['n_estimators']       = xgb_model.n_estimators
+    info['max_depth']          = xgb_model.max_depth
+    info['subsample']          = xgb_model.subsample
+    info['subject removal']    = sys.argv[2]
+    info['data']               = sys.argv[3]
+    i=1
+    return info
+
+def create_directory(directory_path):
+    if os.path.exists(directory_path):
+        return None
+    else:
+        try:
+            os.makedirs(directory_path)
+        except:
+            # in case another machine created the path meanwhile !:(
+            return None
+        return directory_path
+
 def fit_classifier():
 
     #LOAD AND PREPROCESS THE DATASET
@@ -159,17 +190,29 @@ def fit_classifier():
     print("time took to go through the test dataset", durationTest)
 
     #GETTING THE PERFORMANCE OF THE MODEL
-    metrics         = calculate_metrics(Y_test, y_pred)
+    metrics         = calculate_metrics(Y_test, y_pred, durationTrain, durationTest)
     confusionMatrix = confusion_matrix(Y_test, y_pred)
     print("confusion matrix\n", confusionMatrix)
-    print("accuracy:  ", metrics['accuracy'])
-    print("precision: ", metrics['precision'])
-    print("recall:    ", metrics['recall'])
-    print("f1_score:  ", metrics['f1 score'])
+    print("accuracy:  ", metrics['accuracy'][0])
+    print("precision: ", metrics['precision'][0])
+    print("recall:    ", metrics['recall'][0])
+    print("f1_score:  ", metrics['f1 score'][0])
 
-    #SAVES THE MODEL WEIGHTS IF WANTED FOR LATER USE
-    file_name = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
+    #CREATE THE DIRECTORY
+    file = os.path.abspath('.') + '/saved_datasets/XGBoost/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    create_directory(file)
+    #SAVES THE MODEL WEIGHTS
+    file_name = file+'/RC_model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_name, "wb"))
+    file_last = os.path.abspath('.') +'/saved_datasets/RC_model_weights_XGBoost.pkl'
+    pickle.dump(xgb_model, open(file_last, "wb"))
+
+    #SAVES THE PARAMETERS FOR THIS TRIAL
+    info = gettingInfo(xgb_model)
+    info.to_csv(file+'/info.csv', index=False)
+
+    #SAVES THE METRICS FOR THIS TRIAL
+    metrics.to_csv(file+'/df_metrics.csv', index=False)
     i=1
 
 def fitted_classifier():
@@ -181,23 +224,22 @@ def fitted_classifier():
     Y_train, Y_test                  = np.squeeze(Y_train), np.squeeze(Y_test)
 
 
-
     #LOAD THE ALREADY FITTED MODEL
     file_name        = os.path.abspath('.') + '/saved_datasets/RC_model_weights_XGBoost.pkl'
     xgb_model_loaded = pickle.load(open(file_name, "rb"))
 
     #EVALUATING THE MODEL
-    time2   = time.time()
-    y_pred  = xgb_model_loaded.predict(X_test)
+    time2        = time.time()
+    y_pred       = xgb_model_loaded.predict(X_test)
     durationTest = time.time() - time2
     print("time took to go through the test dataset", durationTest)
 
     #GETTING THE PERFORMANCE OF THE MODEL
-    metrics         = calculate_metrics(Y_test, y_pred)
-    print("accuracy:  ", metrics['accuracy'])
-    print("precision: ", metrics['precision'])
-    print("recall:    ", metrics['recall'])
-    print("f1_score:  ", metrics['f1 score'])
+    metrics         = calculate_metrics(Y_test, y_pred, durationTest)
+    print("accuracy:  ", metrics['accuracy'][0])
+    print("precision: ", metrics['precision'][0])
+    print("recall:    ", metrics['recall'][0])
+    print("f1_score:  ", metrics['f1 score'][0])
 
     predictions = case_by_case_analysis(Y_test, y_pred)
 
@@ -245,8 +287,8 @@ if __name__ == '__main__':
     #OPTIONS:
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
-         #RO OR RC OR RC+RO
-    sys.argv.extend(['train', 'before subject removal', 'RC+RO'])
+         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO
+    sys.argv.extend(['train', 'before subject removal', 'RC'])
 
     if sys.argv[1] == 'train':
         #TRAINS A XGBOOST MODEL ON THE PREPROCESSED DATA

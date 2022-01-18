@@ -209,7 +209,7 @@ def fitted_classifier():
     criterion        = nn.CrossEntropyLoss()
 
     #LOAD THE ALREADY FITTED MODEL
-    file_name        = os.path.abspath('.') + '/saved_datasets/model_weights_NNFixed.pth'
+    file_name        = os.path.abspath('.') + '/saved_datasets/model_weights_NN.pth'
     model_loaded.load_state_dict(torch.load(file_name))
 
 

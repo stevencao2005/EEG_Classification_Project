@@ -201,6 +201,7 @@ def fit_classifier():
     #CREATE THE DIRECTORY
     file = os.path.abspath('.') + '/saved_datasets/XGBoost/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     create_directory(file)
+
     #SAVES THE MODEL WEIGHTS
     file_name = file+'/model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_name, "wb"))
@@ -287,8 +288,8 @@ if __name__ == '__main__':
     #OPTIONS:
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
-         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO
-    sys.argv.extend(['train', 'before subject removal', 'RC'])
+         #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO OR AS+RO+RC
+    sys.argv.extend(['load', 'after subject removal', 'AS+RO+RC'])
 
     if sys.argv[1] == 'train':
         #TRAINS A XGBOOST MODEL ON THE PREPROCESSED DATA

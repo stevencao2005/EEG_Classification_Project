@@ -40,6 +40,11 @@ class Load_And_Preprocess_Dataset():
                 dataset2    = self.func_data_load_SPEC_RO_preprocessed()
                 BED_dataset = self.func_data_load_SPEC_twoDatasetsCombined_preprocessed(dataset1, dataset2)
                 return BED_dataset
+            if sys.argv[3] == 'RO+RC':
+                dataset1    = self.func_data_load_SPEC_RC_preprocessed()
+                dataset2    = self.func_data_load_SPEC_RO_preprocessed()
+                BED_dataset = self.func_data_load_SPEC_twoDatasetsCombined_preprocessed(dataset1, dataset2)
+                return BED_dataset
             if sys.argv[3] == 'AS+RC':
                 dataset1    = self.func_data_load_SPEC_AS_preprocessed()
                 dataset2    = self.func_data_load_SPEC_RC_preprocessed()
@@ -50,7 +55,13 @@ class Load_And_Preprocess_Dataset():
                 dataset2    = self.func_data_load_SPEC_RO_preprocessed()
                 BED_dataset = self.func_data_load_SPEC_twoDatasetsCombined_preprocessed(dataset1, dataset2)
                 return BED_dataset
-
+            if sys.argv[3] == 'AS+RO+RC':
+                dataset1    = self.func_data_load_SPEC_AS_preprocessed()
+                dataset2    = self.func_data_load_SPEC_RO_preprocessed()
+                BED_dataset = self.func_data_load_SPEC_twoDatasetsCombined_preprocessed(dataset1, dataset2)
+                dataset3    = self.func_data_load_SPEC_RC_preprocessed()
+                BED_dataset = self.func_data_load_SPEC_twoDatasetsCombined_preprocessed(BED_dataset, dataset3)
+                return BED_dataset
     def func_data_load_SPEC_RC_preprocessed(self):
         BED_dataset = loadmat(os.path.abspath('.') + '/BED/Features/Identification/SPEC/SPEC_rest_closed.mat')
         return BED_dataset
@@ -66,30 +77,30 @@ class Load_And_Preprocess_Dataset():
     def func_data_load_SPEC_twoDatasetsCombined_preprocessed(self, dataset1, dataset2):
         dataset1_features = dataset1['feat']
         dataset1_labels   = dataset1['Y']
-        dataset1_info     = self.func_data_getinfo(dataset1)
+        dataset1_info     = self.func_data_get_SubjectSamples(dataset1)
 
         dataset2_features = dataset2['feat']
         dataset2_labels   = dataset2['Y']
-        dataset2_info     = self.func_data_getinfo(dataset2)
+        dataset2_info     = self.func_data_get_SubjectSamples(dataset2)
 
 
-        result      = [min(els) for els in zip(dataset1_info[1], dataset2_info[1])]
+        result      = [min(els) for els in zip(dataset1_info, dataset2_info)]
 
-        dataset1and2_features = np.zeros((dataset1_features.shape[0], 448))
+        dataset1and2_features = np.zeros((dataset1_features.shape[0], dataset1_features.shape[1]+dataset2_features.shape[1]))
         dataset1and2_labels   = np.zeros((dataset1_features.shape[0], 2))
 
         i=1
-        for j in range(len(dataset1_info[1]) + 1):
-            threshold = sum(dataset1_info[1][:j])
+        for j in range(len(dataset1_info) + 1):
+            threshold = sum(dataset1_info[:j])
             if i <= threshold:
-                startInd = sum(dataset1_info[1][:j])
-                endInd   = sum(dataset1_info[1][:j + 1])
+                startInd = sum(dataset1_info[:j])
+                endInd   = sum(dataset1_info[:j + 1])
                 if endInd == 2875:
                     endInd = 2876
                 m = startInd
                 for k in range(int(endInd - startInd)):  # k=1
-                    dataset1_Minimums         = sum(dataset1_info[1][:j])
-                    dataset2_Minimums         = sum(dataset2_info[1][:j])
+                    dataset1_Minimums         = sum(dataset1_info[:j])
+                    dataset2_Minimums         = sum(dataset2_info[:j])
                     oneSampledataset1         = dataset1_features[dataset1_Minimums + k, :]
                     oneSampledataset2         = dataset2_features[dataset2_Minimums + k, :]
                     oneSampledataset1and2     = np.append(oneSampledataset1, oneSampledataset2)
@@ -168,6 +179,31 @@ class Load_And_Preprocess_Dataset():
         print("    Example for one sample: ", info["INFO"]['exampleOfOneSample'])
 
         return info, subjectSessionSamples
+
+    def func_data_get_SubjectSamples(self, BED_dataset):
+        # getting the number of samples for each subject
+        labels = BED_dataset['Y']
+        valueChanges = np.concatenate(
+            (np.array([0]), np.unique(np.where(labels[:-1, ] != labels[1:, ])[0]), np.array([labels.shape[0] - 1])),
+            axis=0)
+        subjectSamples = []
+        for i in range(0, len(valueChanges) + 1, 3):
+            if i == 0:
+                continue
+            subjectSamples.append(valueChanges[i] - valueChanges[i - 3])
+        numofSamplesPerSubject = dict()
+        for m in range(len(subjectSamples)):
+            numofSamplesPerSubject[str(m + 1)] = subjectSamples[m]
+
+        subjectSessionSamples = []
+        for i in range(0, len(valueChanges)):
+            if i == 0:
+                continue
+            subjectSessionSamples.append(valueChanges[i] - valueChanges[i - 1])
+        if subjectSessionSamples[0] == 0:
+            subjectSessionSamples.remove(0)
+        return subjectSessionSamples
+
     def func_getOnlyGoodSubjectsData(self, X_train, X_test, Y_train, Y_test):
         indexesTrain = []
         indexesTest  = []

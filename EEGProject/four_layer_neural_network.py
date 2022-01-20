@@ -1,4 +1,6 @@
 
+"""
+@author: Steven Cao"""
 #IMPORT ALL NEEDED MODULES
 
 #Standard library imports

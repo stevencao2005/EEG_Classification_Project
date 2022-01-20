@@ -1,3 +1,6 @@
+"""
+@author: Steven Cao"""
+
 
 #IMPORT ALL NEEDED MODULES
 

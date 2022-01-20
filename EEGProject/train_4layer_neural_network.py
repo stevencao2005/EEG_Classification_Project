@@ -1,4 +1,5 @@
-""" Author: Steven Cao"""
+"""
+@author: Steven Cao"""
 
 
 #IMPORT ALL NEEDED MODULES
@@ -128,6 +129,7 @@ def case_by_case_analysis(y_true, y_pred):
                     print("Sample {0}: Predicted as {1}  Actual Value is {2}".format(sampleNum[0], sampleNum[1],
                                                                                      sampleNum[2]))
     return predictions
+
 def gettingInfo(model, optimizer):
     info = pd.DataFrame(data=np.zeros((1, 8), dtype=np.float), index=[0],
                        columns=['lr', 'momentum', 'dampening', 'weight_decay', 'nesterov', 'epochs', 'subject removal', 'data'])

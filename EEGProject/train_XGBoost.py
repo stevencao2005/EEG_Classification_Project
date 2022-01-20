@@ -199,23 +199,25 @@ def fit_classifier():
     print("recall:    ", metrics['recall'][0])
     print("f1_score:  ", metrics['f1 score'][0])
 
-    #CREATE THE DIRECTORY
+    # SAVING THE MODEL WEIGHTS AND INFO ABOUT THE TRIAL
+
+    # create the directory
     file = os.path.abspath('.') + '/saved_datasets/XGBoost/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     create_directory(file)
 
-    #SAVES THE MODEL WEIGHTS
+    #saves the model weights
     file_name = file+'/model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_name, "wb"))
     file_last = os.path.abspath('.') +'/saved_datasets/model_weights_XGBoost.pkl'
     pickle.dump(xgb_model, open(file_last, "wb"))
 
-    #SAVES THE PARAMETERS FOR THIS TRIAL
+    #saves the parameters for this trial
     info = gettingInfo(xgb_model)
     info.to_csv(file+'/info.csv', index=False)
 
-    #SAVES THE METRICS FOR THIS TRIAL
+    #saves the metrics for this trial
     metrics.to_csv(file+'/df_metrics.csv', index=False)
-    i=1
+
 
 def fitted_classifier():
 
@@ -231,9 +233,9 @@ def fitted_classifier():
     xgb_model_loaded = pickle.load(open(file_name, "rb"))
 
     #EVALUATING THE MODEL
-    time2        = time.time()
-    y_pred       = xgb_model_loaded.predict(X_test)
-    durationTest = time.time() - time2
+    time2            = time.time()
+    y_pred           = xgb_model_loaded.predict(X_test)
+    durationTest     = time.time() - time2
     print("time took to go through the test dataset", durationTest)
 
     #GETTING THE PERFORMANCE OF THE MODEL
@@ -243,7 +245,7 @@ def fitted_classifier():
     print("recall:    ", metrics['recall'][0])
     print("f1_score:  ", metrics['f1 score'][0])
 
-    predictions = case_by_case_analysis(Y_test, y_pred)
+    predictions     = case_by_case_analysis(Y_test, y_pred)
 
 def tune_classifier():
     #LOAD AND PREPROCESS THE DATASET

@@ -183,20 +183,24 @@ def fit_classifier():
     print("recall:    ", metrics['recall'][0])
     print("f1_score:  ", metrics['f1 score'][0])
 
-    #CREATE THE DIRECTORY
+
+    #SAVING THE MODEL WEIGHTS AND INFO ABOUT THE TRIAL
+
+    #create the directory
     file = os.path.abspath('.') + '/saved_datasets/neural_network/'+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     create_directory(file)
-    #SAVES THE MODEL WEIGHTS
+
+    #saves the model weights
     file_name = file+'/model_weights_NN.pth'
     torch.save(model.state_dict(), file_name)
     file_last = os.path.abspath('.') +'/saved_datasets/model_weights_NN.pth'
     torch.save(model.state_dict(), file_last)
 
-    #SAVES THE PARAMETERS FOR THIS TRIAL
+    #saves the parameters for this trial
     info = gettingInfo(model, optimizer)
     info.to_csv(file+'/info.csv', index=False)
 
-    #SAVES THE METRICS FOR THIS TRIAL
+    #saves the metrics for this trial
     metrics.to_csv(file+'/df_metrics.csv', index=False)
 
 def fitted_classifier():
@@ -243,7 +247,7 @@ if __name__ == '__main__':
          #TRAIN OR LOAD
          #AFTER SUBJECT REMOVAL OR BEFORE SUBJECT REMOVAL
          #RO OR RC OR AS OR RC+RO OR AS+RC OR AS+RO OR AS+RO+RC
-    sys.argv.extend(['load', 'after subject removal', 'RC'])
+    sys.argv.extend(['train', 'after subject removal', 'RC'])
 
     if sys.argv[1] == 'train':
         #TRAINS A 4-LAYER NEURAL NETWORK ON THE PREPROCESSED DATA

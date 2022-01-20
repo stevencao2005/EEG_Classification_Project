@@ -72,30 +72,24 @@ class Net(nn.Module):
         return y_pred, y_true
 
     def compute_performance_metrics(self, test_loader):
-        y_pred = []
-        y_true   = []
 
         #PREDICTING THE TEST SAMPLES
-        start_time = time.time()
-        for x, y in test_loader:
-            output  = self.forward_pass(x)
-            output1 = output.cpu().detach().numpy()
-            y_pred.extend(np.argmax(output1, axis=1))
-            y_true.extend(np.argmax(y.numpy(), axis=1))
-        duration = time.time()-start_time
+        start_time     = time.time()
+        y_pred, y_true = self.predict(test_loader)
+        duration       = time.time()-start_time
         print("time took to go through the test dataset", duration)
 
         #EVALUTING THE MODEL
         confusionMatrix = confusion_matrix(y_true, y_pred)
 
-        metrics = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
+        metrics         = pd.DataFrame(data=np.zeros((1, 4), dtype=np.float), index=[0],
                            columns=['accuracy', 'precision', 'recall', 'f1 score'])
 
-        labels = list(np.unique(y_true))
-        metrics['accuracy'] = accuracy_score(y_true, y_pred)
-        metrics['recall'] = recall_score(y_true, y_pred, labels=labels, average='macro')
+        labels               = list(np.unique(y_true))
+        metrics['accuracy']  = accuracy_score(y_true, y_pred)
+        metrics['recall']    = recall_score(y_true, y_pred, labels=labels, average='macro')
         metrics['precision'] = precision_score(y_true, y_pred, labels=labels, average='macro')
-        metrics['f1 score'] = f1_score(y_true, y_pred, labels=labels, average='macro')
+        metrics['f1 score']  = f1_score(y_true, y_pred, labels=labels, average='macro')
 
         return y_pred, y_true, metrics, confusionMatrix
 

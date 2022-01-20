@@ -166,7 +166,7 @@ def fit_classifier():
     train_loader, test_loader        = LoaderPreprocessor.func_createTensorDataset(X_train, X_test, Y_train, Y_test)
 
     #4-LAYERED NEURAL NETWORK USING PYTORCH
-    model     = Net(in_features=X_train.shape[1], epochs=1900)
+    model     = Net(in_features=X_train.shape[1], epochs=100)
     optimizer = optim.SGD(model.parameters(), lr=0.055, weight_decay=0.0001)
     criterion = nn.CrossEntropyLoss()
 

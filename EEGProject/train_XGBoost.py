@@ -167,10 +167,6 @@ def tune_classifier():
     print("Best parameters:", clf.best_params_)
     print("Lowest RMSE: ", (-clf.best_score_) ** (1 / 2.0))
 
-    i=1
-
-def main():
-    pass
 
 if __name__ == '__main__':
     #STARTING CODE --------
@@ -191,6 +187,5 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'tune':
         #TUNE THE XGBOOST MODEL FOR THE BEST HYPER PARAMETERS
         tune_classifier()
-    i =1
 
     pass

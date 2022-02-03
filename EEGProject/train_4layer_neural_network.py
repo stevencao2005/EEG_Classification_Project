@@ -137,12 +137,6 @@ def fitted_classifier():
     print("f1_score:  ", metrics['f1 score'][0])
 
 
-
-    i=1
-
-def main():
-    pass
-
 if __name__ == '__main__':
     #STARTING CODE --------
 
@@ -160,7 +154,6 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'load':
         #LOADS THE TRAINED 4-LAYER NEURAL NETWORK
         fitted_classifier()
-    i =1
 
     pass
 
